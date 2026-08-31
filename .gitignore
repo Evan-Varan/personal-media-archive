@@ -1,0 +1,7 @@
+.env
+data/posts.json
+uploads/*
+!uploads/.gitkeep
+node_modules/
+.wrangler/
+.dev.vars

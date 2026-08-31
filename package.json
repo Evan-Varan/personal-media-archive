@@ -1,0 +1,16 @@
+{
+  "name": "horizon-log",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "cf:dev": "wrangler dev",
+    "cf:migrate": "wrangler d1 migrations apply DB --remote",
+    "cf:deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#d9f6ff" />
+    <meta name="description" content="My personal site for games, music, and pictures." />
+    <title>My Site — games + music</title>
+    <script>
+      try {
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        if (!reduced && !sessionStorage.getItem('evan-site-boot-seen')) document.documentElement.classList.add('boot-pending')
+      } catch {}
+    </script>
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body data-page="log" data-channel="log">
+    <div class="boot-screen" id="bootScreen" aria-hidden="true">
+      <div class="boot-horizon"></div>
+      <div class="boot-orbit"><i></i><i></i></div>
+      <div class="boot-rings"><i></i><i></i><i></i></div>
+      <div class="boot-core"><i></i><i></i><i></i></div>
+      <div class="boot-traces"><i></i><i></i><i></i><i></i></div>
+      <div class="boot-copy"><p>EVAN'S SITE</p><small>GETTING THINGS READY</small></div>
+      <div class="boot-progress"><span></span></div>
+      <div class="boot-readout"><span>01</span><i></i><span>START</span></div>
+    </div>
+
+    <div class="ambient" aria-hidden="true">
+      <div class="noise"></div>
+      <div class="orb orb-one"></div>
+      <div class="orb orb-two"></div>
+      <div class="orb orb-three"></div>
+      <div class="ribbon ribbon-one"></div>
+      <div class="ribbon ribbon-two"></div>
+      <div class="bubble-field" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="aero-grid"></div>
+      <div class="aero-meadow" aria-hidden="true"><b></b><div class="grass-sprigs"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span></span><span></span></div>
+    </div>
+    <div class="aero-scene" aria-label="Interactive landscape details">
+      <!-- Each page reveals only its own discoveries, positioned over the illustrated world. -->
+      <button class="scene-item scene-dashboard scene-bubble" type="button" data-scene="bubble" aria-label="Pop a bubble drifting over the meadow"><span class="scene-highlight" aria-hidden="true"></span><span class="scene-hint" aria-hidden="true">POP</span></button>
+      <button class="scene-item scene-dashboard scene-buddies" type="button" data-scene="buddies" aria-label="Say hello to the little blue and green buddies"><span class="scene-highlight" aria-hidden="true"></span><span class="scene-hint" aria-hidden="true">HELLO</span></button>
+      <button class="scene-item scene-dashboard scene-plane" type="button" data-scene="plane" aria-label="Send the tiny plane over the city"><span class="scene-highlight" aria-hidden="true"></span><span class="scene-hint" aria-hidden="true">FLY</span></button>
+
+      <button class="scene-item scene-games scene-controller" type="button" data-scene="controller" aria-label="Wake the controller in the game garden"><span class="scene-highlight" aria-hidden="true"></span><span class="scene-hint" aria-hidden="true">PLAY</span></button>
+      <button class="scene-item scene-games scene-save-cube" type="button" data-scene="save-cube" aria-label="Open the glowing save crystal"><span class="scene-highlight" aria-hidden="true"></span><span class="scene-hint" aria-hidden="true">OPEN</span></button>
+      <button class="scene-item scene-games scene-drone" type="button" data-scene="drone" aria-label="Set the garden drone in motion"><span class="scene-highlight" aria-hidden="true"></span><span class="scene-hint" aria-hidden="true">FLY</span></button>
+
+      <button class="scene-item scene-music scene-speaker" type="button" data-scene="speaker" aria-label="Let the lagoon speaker ripple"><span class="scene-highlight" aria-hidden="true"></span><span class="scene-hint" aria-hidden="true">LISTEN</span></button>
+      <button class="scene-item scene-music scene-disc" type="button" data-scene="disc" aria-label="Spin the floating compact disc"><span class="scene-highlight" aria-hidden="true"></span><span class="scene-hint" aria-hidden="true">SPIN</span></button>
+      <button class="scene-item scene-music scene-bird" type="button" data-scene="bird" aria-label="Send the little sound bird through the sky"><span class="scene-highlight" aria-hidden="true"></span><span class="scene-hint" aria-hidden="true">FLY</span></button>
+    </div>
+
+    <div class="pointer pointer-dot" aria-hidden="true"></div>
+    <div class="pointer pointer-ring" aria-hidden="true"></div>
+    <div class="cursor-cross" id="cursorCross" aria-hidden="true"><i></i><i></i><b></b></div>
+    <div class="cursor-trails" id="cursorTrails" aria-hidden="true"></div>
+    <div class="route-transition" id="routeTransition" aria-hidden="true"><span></span><span></span><span></span></div>
+
+    <header class="site-header" id="siteHeader">
+      <a class="wordmark magnetic" href="/" aria-label="Home">
+        <span class="aero-logo"><i></i><i></i><i></i><b></b></span>
+        <span class="wordmark-copy"><b>MY</b><em>SITE</em></span>
+      </a>
+      <nav class="filter-nav glass" aria-label="Site navigation">
+        <a class="filter magnetic" href="/" data-filter="all"><span>01</span> HOME</a>
+        <a class="filter magnetic" href="/games" data-filter="game"><span>02</span> GAMES</a>
+        <a class="filter magnetic" href="/music" data-filter="music"><span>03</span> MUSIC</a>
+        <div class="nav-slider" aria-hidden="true"></div>
+      </nav>
+    </header>
+
+    <main id="feedView">
+      <section class="hero" id="log">
+        <div class="channel-scenery" aria-hidden="true">
+          <div class="game-scenery"><i></i><i></i><i></i><b></b></div>
+          <div class="music-scenery"><i></i><i></i><i></i><b></b></div>
+        </div>
+      <div class="hero-topline reveal"><span id="heroSystemLabel">MY SITE / EVERYTHING</span> <i></i> GAMES + MUSIC + PICTURES</div>
+      <div class="hero-copy">
+        <p class="eyebrow reveal">A FEW THINGS I LIKE</p>
+        <h1 class="hero-title" id="heroTitle"><span class="reveal-word">Hi! I'm Evan,</span><br /><span class="reveal-word outline">Welcome to my</span><br /><span class="reveal-word">personal blog.</span></h1>
+        <div class="dashboard-ctas hero-destinations" aria-label="Choose a page">
+          <a class="dashboard-cta cta-games magnetic" href="/games">
+            <span class="cta-icon cta-game-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="cta-label"><b>GAMES</b></span>
+            <span class="cta-arrow" aria-hidden="true">↗</span>
+          </a>
+          <a class="dashboard-cta cta-music magnetic" href="/music">
+            <span class="cta-icon cta-music-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="cta-label"><b>MUSIC</b></span>
+            <span class="cta-arrow" aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </div>
+      <div class="hero-bottom reveal">
+        <p id="heroDescription">Games, music, pictures, and whatever else<br />I feel like putting here.</p>
+          <a href="#feed" class="scroll-cue magnetic"><b>↓</b> SEE POSTS</a>
+        </div>
+        <div class="hero-meter" aria-hidden="true"><span></span><i>SCROLL DOWN</i></div>
+      </section>
+
+      <section class="feed-section" id="feed">
+        <div class="feed-heading">
+          <div class="feed-count"><span id="postCount">--</span> POSTS</div>
+          <p class="feed-note">Games, music,<br />and whatever else.</p>
+          <div class="feed-arc" aria-hidden="true"></div>
+        </div>
+        <div class="post-feed" id="postFeed" aria-live="polite"></div>
+        <p class="empty-state" id="emptyState" hidden>Nothing here yet.</p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-radar" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
+      <p>MY SITE <span>●</span> GAMES, MUSIC + PICTURES</p>
+      <a href="#admin" class="admin-link">POSTING AREA ↗</a>
+    </footer>
+
+    <section class="post-overlay" id="postOverlay" aria-hidden="true">
+      <div class="overlay-scrim"></div>
+      <button class="overlay-close magnetic" id="overlayClose" aria-label="Close post">× <span>CLOSE</span></button>
+      <div class="overlay-shell" id="overlayShell"></div>
+    </section>
+
+    <section class="image-lightbox" id="imageLightbox" aria-hidden="true" aria-label="Fullscreen image viewer" role="dialog" aria-modal="true">
+      <div class="lightbox-backdrop"></div>
+      <button class="lightbox-close" id="lightboxClose" aria-label="Close fullscreen image">× <span>RETURN</span></button>
+      <figure class="lightbox-frame">
+        <img id="lightboxImage" alt="" />
+        <figcaption id="lightboxCaption"></figcaption>
+      </figure>
+    </section>
+
+    <section class="admin-view" id="adminView" aria-hidden="true">
+      <div class="admin-glow"></div>
+      <a href="/" class="admin-exit">← BACK TO SITE</a>
+      <div class="admin-login glass" id="adminLogin">
+          <p class="console-label">PRIVATE / SIGN IN</p>
+        <h2>Sign<br /><em>in.</em></h2>
+        <form id="loginForm">
+          <label for="password">PASSPHRASE</label>
+          <input id="password" type="password" autocomplete="current-password" required />
+          <button class="console-button" type="submit">CONTINUE <span>→</span></button>
+          <p class="form-message" id="loginMessage" role="alert"></p>
+        </form>
+      </div>
+      <div class="admin-console" id="adminConsole" hidden>
+        <div class="console-topbar">
+          <div><p class="console-label">PRIVATE / POSTING AREA</p><h2>Make a <em>post.</em></h2></div>
+          <button class="logout-button" id="logoutButton">LOG OUT ↗</button>
+        </div>
+        <div class="composer-grid">
+          <form class="composer glass" id="postForm">
+            <input type="hidden" id="editingId" />
+            <div class="composer-header"><span id="composerMode">NEW POST</span><button type="button" id="cancelEdit" hidden>CANCEL EDIT</button></div>
+            <label class="upload-zone" id="uploadZone" for="images">
+              <input type="file" id="images" name="images" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple />
+              <div class="upload-art"><i></i><i></i><i></i></div>
+              <strong>ADD IMAGES</strong><span>drop files here or choose them <b>+</b></span>
+            </label>
+            <div class="image-preview" id="imagePreview"></div>
+            <p class="image-order-hint" id="imageOrderHint" hidden>Drag images into the order you want them to appear.</p>
+            <label class="field-label" for="description">A QUICK NOTE <small>OPTIONAL</small></label>
+            <textarea id="description" name="description" maxlength="1000" placeholder="Finally got around to playing this again. Still holds up."></textarea>
+            <div class="field-row">
+              <div>
+                <span class="field-label">TYPE</span>
+                <div class="type-picker" id="categorySelect" role="radiogroup" aria-label="Post type">
+                  <input id="category" name="category" type="hidden" value="game" />
+                  <button class="type-option" type="button" role="radio" data-category="game" aria-checked="true"><i aria-hidden="true">✦</i>GAME</button>
+                  <button class="type-option" type="button" role="radio" data-category="music" aria-checked="false"><i aria-hidden="true">♪</i>MUSIC</button>
+                  <button class="type-option" type="button" role="radio" data-category="other" aria-checked="false"><i aria-hidden="true">○</i>OTHER</button>
+                </div>
+              </div>
+              <div>
+                <span class="field-label">DATE</span>
+                <div class="date-picker" id="datePicker">
+                  <input id="postDate" name="postDate" type="hidden" />
+                  <button class="date-trigger" id="dateTrigger" type="button" aria-haspopup="dialog" aria-expanded="false"><span class="date-day" id="dateDay">—</span><span class="date-copy"><small id="dateWeekday">SELECT A DATE</small><strong id="dateMonth">—</strong><em id="dateYear">—</em></span><i class="date-glyph" aria-hidden="true"></i></button>
+                  <div class="date-popover" id="datePopover" role="dialog" aria-label="Choose post date" hidden>
+                    <div class="date-nav"><button id="datePrevious" type="button" aria-label="Previous month">←</button><strong id="calendarMonth"></strong><button id="dateNext" type="button" aria-label="Next month">→</button></div>
+                    <div class="calendar-weekdays" aria-hidden="true"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+                    <div class="calendar-grid" id="calendarGrid" role="grid"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <section class="music-details-panel" id="musicDetailsPanel" aria-labelledby="musicDetailsHeading" hidden>
+              <p class="field-label" id="musicDetailsHeading">MUSIC DETAILS <small>OPTIONAL</small></p>
+              <div class="music-detail-fields">
+                <label for="albumName"><span>ALBUM NAME</span><input id="albumName" name="albumName" type="text" maxlength="120" autocomplete="off" autocapitalize="words" placeholder="e.g. Sometimes I Might Be Introvert" /></label>
+                <label for="artistName"><span>ARTIST</span><input id="artistName" name="artistName" type="text" maxlength="120" autocomplete="off" autocapitalize="words" placeholder="e.g. Little Simz" /></label>
+                <label for="genre"><span>GENRE</span><input id="genre" name="genre" type="text" maxlength="80" autocomplete="off" autocapitalize="words" placeholder="e.g. Dream pop, hip-hop, ambient" /></label>
+              </div>
+              <div class="art-lookup-row"><button class="art-lookup" id="lookupAlbumArt" type="button"><span>FIND ALBUM ART</span><b>↗</b></button><p id="musicLookupMessage" role="status"></p></div>
+            </section>
+            <section class="ratings-panel" id="ratingsPanel" aria-labelledby="ratingsHeading">
+              <div class="ratings-heading"><div><p class="field-label" id="ratingsHeading">THE SCORECARD</p><span>Pick only the categories that matter. Your overall score updates as you go.</span></div><output class="overall-rating" aria-live="polite"><small>OVERALL</small><strong id="overallRating">—</strong><span>/ 10</span></output></div>
+              <div class="rating-list">
+                <div class="rating-control"><div class="rating-label"><span>REPLAYABILITY</span><output>NOT RATED</output></div><div class="rating-options" data-rating-options="replayability" role="radiogroup" aria-label="Replayability rating"></div><input id="ratingReplayability" data-rating="replayability" type="hidden" value="0" /></div>
+                <div class="rating-control"><div class="rating-label"><span>LENGTH</span><output>NOT RATED</output></div><div class="rating-options" data-rating-options="length" role="radiogroup" aria-label="Length rating"></div><input id="ratingLength" data-rating="length" type="hidden" value="0" /></div>
+                <div class="rating-control"><div class="rating-label"><span>STORY</span><output>NOT RATED</output></div><div class="rating-options" data-rating-options="story" role="radiogroup" aria-label="Story rating"></div><input id="ratingStory" data-rating="story" type="hidden" value="0" /></div>
+                <div class="rating-control"><div class="rating-label"><span>GRAPHICS</span><output>NOT RATED</output></div><div class="rating-options" data-rating-options="graphics" role="radiogroup" aria-label="Graphics rating"></div><input id="ratingGraphics" data-rating="graphics" type="hidden" value="0" /></div>
+                <div class="rating-control"><div class="rating-label"><span>MUSIC</span><output>NOT RATED</output></div><div class="rating-options" data-rating-options="music" role="radiogroup" aria-label="Music rating"></div><input id="ratingMusic" data-rating="music" type="hidden" value="0" /></div>
+                <div class="rating-control"><div class="rating-label"><span>GAMEPLAY</span><output>NOT RATED</output></div><div class="rating-options" data-rating-options="gameplay" role="radiogroup" aria-label="Gameplay rating"></div><input id="ratingGameplay" data-rating="gameplay" type="hidden" value="0" /></div>
+              </div>
+            </section>
+            <div class="publish-row"><label class="publish-toggle"><input id="published" name="published" type="checkbox" checked /><span></span> PUBLISH NOW</label><button class="console-button" type="submit" id="savePost">PUBLISH <span>→</span></button></div>
+            <p class="form-message" id="postMessage" role="alert"></p>
+          </form>
+          <aside class="post-preview-panel glass">
+            <p class="console-label">LIVE PREVIEW</p>
+            <div class="mini-card" id="miniCard"><div class="mini-image"></div><div><small id="previewCategory">GAME / TODAY</small><p id="previewText">Your short note goes here.</p><span id="previewRating">UNRATED</span></div></div>
+            <p class="admin-help">Add images, write a sentence if you want, pick a type, then publish.</p>
+          </aside>
+        </div>
+        <section class="post-manager"><div class="manager-heading"><p class="console-label">MY POSTS</p><span id="managerCount">0 POSTS</span></div><div id="adminPosts" class="admin-posts"></div></section>
+      </div>
+    </section>
+
+    <template id="postTemplate">
+      <article class="post-card reveal-card" tabindex="0">
+        <button class="post-open" aria-label="Open post"></button>
+        <div class="post-images"></div>
+        <div class="card-gloss"></div>
+        <div class="post-ui">
+          <p class="post-index"></p>
+          <span class="post-category"></span>
+          <span class="open-mark">↗</span>
+        </div>
+        <div class="post-caption"><p class="post-album-name" hidden></p><p class="post-artist-name" hidden></p><p class="post-description"></p><div class="post-meta"><span class="post-date"></span><span class="post-rating"></span></div></div>
+      </article>
+    </template>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

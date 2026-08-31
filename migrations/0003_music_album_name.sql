@@ -1,0 +1,1 @@
+ALTER TABLE posts ADD COLUMN album_name TEXT NOT NULL DEFAULT '';

@@ -1,0 +1,1 @@
+ALTER TABLE posts ADD COLUMN artist_name TEXT NOT NULL DEFAULT '';
