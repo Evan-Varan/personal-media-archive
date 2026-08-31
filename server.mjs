@@ -27,6 +27,7 @@ const port = Number(process.env.PORT || 3000)
 const adminPassword = process.env.ADMIN_PASSWORD || ''
 const sessionSecret = process.env.SESSION_SECRET || adminPassword
 const maxUploadBytes = 20 * 1024 * 1024
+const musicBrainzQuerySpecialCharacters = new Set(['+', '-', '!', '(', ')', '{', '}', '[', ']', '^', '"', '~', '*', '?', ':', '\\', '/', '&', '|'])
 let lastMusicBrainzRequestAt = 0
 
 const starterPosts = [
@@ -167,6 +168,22 @@ function normalizedMusicField(value, maximum) {
   return String(value || '').trim().replace(/[\r\n]/g, ' ').slice(0, maximum)
 }
 
+function escapeMusicBrainzQuery(value) {
+  return [...String(value)].map((character) => musicBrainzQuerySpecialCharacters.has(character) ? `\\${character}` : character).join('')
+}
+
+function musicBrainzMatchScore(release, artist, album) {
+  const normalized = (value) => String(value || '').toLocaleLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+  const expectedArtist = normalized(artist)
+  const expectedAlbum = normalized(album)
+  const releaseArtist = normalized(musicBrainzArtistName(release))
+  const releaseAlbum = normalized(release.title)
+  let score = releaseAlbum === expectedAlbum ? 20 : releaseAlbum.includes(expectedAlbum) ? 10 : 0
+  if (releaseArtist === expectedArtist) score += 12
+  else if (releaseArtist.includes(expectedArtist) || expectedArtist.includes(releaseArtist)) score += 6
+  return score
+}
+
 function musicBrainzArtistName(release) {
   return (release['artist-credit'] || []).map((credit) => `${credit.name || credit.artist?.name || ''}${credit.joinphrase || ''}`).join('').trim()
 }
@@ -179,7 +196,7 @@ async function musicBrainzFetch(url) {
   const pause = Math.max(0, 1100 - (Date.now() - lastMusicBrainzRequestAt))
   if (pause) await new Promise((resolvePause) => setTimeout(resolvePause, pause))
   lastMusicBrainzRequestAt = Date.now()
-  return fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'PersonalMediaArchive/1.0 (self-hosted personal archive)' } })
+  return fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'EvansBlog/1.0 (https://evanvaranblog.com/)' } })
 }
 
 async function findMusicGenre(release) {
@@ -203,22 +220,32 @@ async function findAlbumArt(artistValue, albumValue) {
   const artist = normalizedMusicField(artistValue, 120)
   const album = normalizedMusicField(albumValue, 120)
   if (!artist || !album) throw new Error('Add both an artist and album name first.')
-  const query = `artist:"${artist.replace(/"/g, ' ')}" AND release:"${album.replace(/"/g, ' ')}"`
-  const search = new URL('https://musicbrainz.org/ws/2/release/')
-  search.searchParams.set('query', query)
-  search.searchParams.set('fmt', 'json')
-  search.searchParams.set('limit', '5')
-  const searchResponse = await musicBrainzFetch(search)
-  if (!searchResponse.ok) throw new Error('The music catalog is unavailable right now. Please try again.')
-  const releases = (await searchResponse.json()).releases || []
-  for (const release of releases.slice(0, 5)) {
-    if (!release?.id) continue
-    const coverResponse = await fetch(`https://coverartarchive.org/release/${encodeURIComponent(release.id)}/front-1200`, { headers: { Accept: 'image/*' } })
-    const contentType = (coverResponse.headers.get('content-type') || '').split(';')[0].toLowerCase()
-    if (!coverResponse.ok || !['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'].includes(contentType)) continue
-    const body = Buffer.from(await coverResponse.arrayBuffer())
-    if (!body.length || body.length > 10 * 1024 * 1024) continue
-    return { body, contentType, albumName: normalizedMusicField(release.title, 120), artistName: normalizedMusicField(musicBrainzArtistName(release), 120), genre: await findMusicGenre(release) }
+  const queries = [
+    `artist:"${escapeMusicBrainzQuery(artist)}" AND release:"${escapeMusicBrainzQuery(album)}"`,
+    `release:"${escapeMusicBrainzQuery(album)}"`
+  ]
+  const checkedReleases = new Set()
+
+  for (const query of queries) {
+    const search = new URL('https://musicbrainz.org/ws/2/release/')
+    search.searchParams.set('query', query)
+    search.searchParams.set('fmt', 'json')
+    search.searchParams.set('limit', '10')
+    const searchResponse = await musicBrainzFetch(search)
+    if (!searchResponse.ok) throw new Error('The music catalog is unavailable right now. Please try again.')
+    const releases = ((await searchResponse.json()).releases || [])
+      .sort((left, right) => musicBrainzMatchScore(right, artist, album) - musicBrainzMatchScore(left, artist, album))
+
+    for (const release of releases) {
+      if (!release?.id || checkedReleases.has(release.id)) continue
+      checkedReleases.add(release.id)
+      const coverResponse = await fetch(`https://coverartarchive.org/release/${encodeURIComponent(release.id)}/front-1200`, { headers: { Accept: 'image/*' } })
+      const contentType = (coverResponse.headers.get('content-type') || '').split(';')[0].toLowerCase()
+      if (!coverResponse.ok || !['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'].includes(contentType)) continue
+      const body = Buffer.from(await coverResponse.arrayBuffer())
+      if (!body.length || body.length > 10 * 1024 * 1024) continue
+      return { body, contentType, albumName: normalizedMusicField(release.title, 120), artistName: normalizedMusicField(musicBrainzArtistName(release), 120), genre: await findMusicGenre(release) }
+    }
   }
   throw new Error('No matching album art was found. You can still add a cover manually.')
 }
