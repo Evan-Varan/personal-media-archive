@@ -12,6 +12,7 @@
     {
       "binding": "DB",
       "database_name": "personal-media-archive",
+      "database_id": "88a21e35-a77f-4388-83ed-193fbd12b806",
       "migrations_dir": "./migrations"
     }
   ],
