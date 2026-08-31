@@ -1,11 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="glow" x1="10" y1="8" x2="53" y2="57" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#d9f6ff"/>
-      <stop offset="1" stop-color="#8bd5e7"/>
-    </linearGradient>
+    <radialGradient id="sky" cx="29%" cy="24%" r="78%">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset=".05" stop-color="#fff"/>
+      <stop offset=".14" stop-color="#d9ffff"/>
+      <stop offset=".44" stop-color="#68cae8"/>
+      <stop offset=".77" stop-color="#1374a9"/>
+      <stop offset="1" stop-color="#07537f"/>
+    </radialGradient>
+    <radialGradient id="land" cx="32%" cy="24%" r="75%">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset=".08" stop-color="#fff"/>
+      <stop offset=".2" stop-color="#defffd"/>
+      <stop offset=".52" stop-color="#9df382"/>
+      <stop offset="1" stop-color="#54b45a"/>
+    </radialGradient>
+    <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#07537f" flood-opacity=".34"/>
+    </filter>
   </defs>
-  <rect width="64" height="64" rx="18" fill="#101722"/>
-  <path d="M17 45 31.6 16h7.1L53 45h-8.2l-2.3-5.1H27.2L24.8 45H17Zm13.4-11.2h9.1L35 23.5l-4.6 10.3Z" fill="url(#glow)"/>
-  <circle cx="47" cy="16" r="4" fill="#f6c46c"/>
+  <g transform="rotate(-8 32 32)" filter="url(#soft-shadow)">
+    <rect x="5" y="5" width="54" height="54" rx="18" fill="url(#sky)" stroke="#fff" stroke-opacity=".88" stroke-width="1.5"/>
+    <ellipse cx="32" cy="32" rx="37" ry="8.8" fill="none" stroke="#e9ffff" stroke-opacity=".84" stroke-width="2.7" transform="rotate(-27 32 32)"/>
+    <circle cx="46" cy="19" r="9" fill="url(#land)"/>
+    <circle cx="18" cy="45" r="4.8" fill="url(#land)"/>
+    <circle cx="39" cy="49" r="2.8" fill="#f3ff9a"/>
+    <circle cx="25" cy="16" r="3.4" fill="#fff"/>
+  </g>
 </svg>

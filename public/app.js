@@ -110,7 +110,6 @@ function applyPublicRoute({ scrollToFeed = false } = {}) {
   $('#heroSystemLabel').textContent = content.system
   $('#heroTitle').innerHTML = content.title
   $('#heroDescription').innerHTML = content.description
-  document.title = content.documentTitle
   window.requestAnimationFrame(positionSceneTargets)
   updateFilterUI()
   renderFeed()
