@@ -28,6 +28,7 @@ const adminPassword = process.env.ADMIN_PASSWORD || ''
 const sessionSecret = process.env.SESSION_SECRET || adminPassword
 const maxUploadBytes = 20 * 1024 * 1024
 const musicBrainzQuerySpecialCharacters = new Set(['+', '-', '!', '(', ')', '{', '}', '[', ']', '^', '"', '~', '*', '?', ':', '\\', '/', '&', '|'])
+const musicCatalogRetryableStatuses = new Set([429, 502, 503, 504])
 let lastMusicBrainzRequestAt = 0
 
 const starterPosts = [
@@ -193,10 +194,18 @@ function displayGenre(value) {
 }
 
 async function musicBrainzFetch(url) {
-  const pause = Math.max(0, 1100 - (Date.now() - lastMusicBrainzRequestAt))
-  if (pause) await new Promise((resolvePause) => setTimeout(resolvePause, pause))
-  lastMusicBrainzRequestAt = Date.now()
-  return fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'EvansBlog/1.0 (https://evanvaranblog.com/)' } })
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const pause = Math.max(0, 1100 - (Date.now() - lastMusicBrainzRequestAt))
+    if (pause) await new Promise((resolvePause) => setTimeout(resolvePause, pause))
+    lastMusicBrainzRequestAt = Date.now()
+    try {
+      const response = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'EvansBlog/1.0 (https://evanvaranblog.com/)' } })
+      if (!musicCatalogRetryableStatuses.has(response.status) || attempt === 2) return response
+    } catch (error) {
+      if (attempt === 2) throw error
+    }
+    await new Promise((resolvePause) => setTimeout(resolvePause, 1100 * (attempt + 1)))
+  }
 }
 
 async function findMusicGenre(release) {
