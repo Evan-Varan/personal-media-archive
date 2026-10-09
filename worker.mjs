@@ -114,7 +114,7 @@ function postFromForm(form, existing = {}) {
   const category = ['game', 'music', 'other'].includes(form.get('category')) ? form.get('category') : 'other'
   return {
     ...existing,
-    description: String(form.get('description') || '').trim().slice(0, 1000),
+    description: String(form.get('description') || '').trim(),
     category,
     albumName: category === 'music' ? String(form.get('albumName') || '').trim().slice(0, 120) : '',
     artistName: category === 'music' ? String(form.get('artistName') || '').trim().slice(0, 120) : '',

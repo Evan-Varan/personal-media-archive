@@ -300,7 +300,7 @@ function postFromFields(fields, existing = {}) {
   const { tags, ratings, overallRating, ...post } = existing
   return {
     ...post,
-    description: (fields.description || '').trim().slice(0, 1000),
+    description: (fields.description || '').trim(),
     category,
     albumName: category === 'music' ? (fields.albumName || '').trim().slice(0, 120) : '',
     artistName: category === 'music' ? (fields.artistName || '').trim().slice(0, 120) : '',
