@@ -79,6 +79,13 @@ function postMetaSummary(post) {
   return ''
 }
 
+function cardDescription(value, maximum = 150) {
+  const description = String(value || '').trim()
+  if (description.length <= maximum) return description
+  const boundary = description.lastIndexOf(' ', maximum)
+  return `${description.slice(0, boundary > 0 ? boundary : maximum).trimEnd()}…`
+}
+
 function visiblePosts() {
   return state.posts.filter((post) => state.filter === 'all' || post.category === state.filter)
 }
@@ -172,7 +179,7 @@ function renderFeed() {
     $('.post-album-name', card).textContent = albumName
     $('.post-artist-name', card).hidden = !artistName
     $('.post-artist-name', card).textContent = artistName ? `ARTIST / ${artistName}` : ''
-    $('.post-description', card).textContent = post.description || ' '
+    $('.post-description', card).textContent = cardDescription(post.description) || ' '
     $('.post-date', card).textContent = formatDate(post.postDate)
     $('.post-rating', card).textContent = postMetaSummary(post)
     const open = () => openPost(post.id, card)
