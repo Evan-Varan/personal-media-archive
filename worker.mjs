@@ -279,7 +279,17 @@ function mailingConfigured(env) {
 }
 
 function mailPage(title, body) {
-  return new Response(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${title}</title><body style="font:16px system-ui;color:#205b70;background:#e4f9f8;padding:3rem;line-height:1.5"><main style="max-width:36rem;margin:auto"><h1>${title}</h1>${body}<p><a href="/">Back to the archive</a></p></main></body></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } })
+  return new Response(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><title>${title} | Evan's Archive</title><style>
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;color:#205b70;background:radial-gradient(circle at 15% 15%,#f5ffff 0,transparent 35%),linear-gradient(135deg,#d0f1f8,#d8f8ee);font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif}
+    main{width:min(100%,510px);padding:clamp(28px,7vw,52px);border:1px solid rgba(255,255,255,.9);border-radius:26px;background:rgba(250,255,255,.78);box-shadow:0 18px 50px rgba(20,100,125,.12),inset 0 1px #fff}
+    .brand{margin:0 0 26px;color:#397f91;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}.icon{display:grid;place-items:center;width:54px;height:54px;margin-bottom:22px;border:1px solid #a6dce1;border-radius:18px;color:#17738d;background:linear-gradient(135deg,#fff,#c5f2ed);font-size:25px}
+    h1{margin:0;color:#1b5c72;font-size:clamp(28px,6vw,38px);line-height:1.1;letter-spacing:-.04em}p{margin:15px 0;color:#4e7d8c}form{margin:26px 0 0}button{padding:14px 21px;border:0;border-radius:11px;color:white;background:#176c8e;font:700 13px system-ui;cursor:pointer;box-shadow:0 7px 18px rgba(17,100,130,.2)}button:hover{background:#105b79}a{display:inline-block;margin-top:26px;color:#24758c;font-size:13px;font-weight:600}a:focus-visible,button:focus-visible{outline:3px solid #58b8ca;outline-offset:4px}
+    </style></head><body><main><p class="brand">Evan's Archive / Email updates</p><div class="icon" aria-hidden="true">&#9993;</div><h1>${title}</h1>${body}<a href="/">&#8592; Back to the archive</a></main></body></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } })
+}
+
+function confirmationEmail(link) {
+  const safeLink = link.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+  return `<!doctype html><html lang="en"><body style="margin:0;padding:32px 16px;background:#e5f7f6;color:#205b70;font-family:Arial,sans-serif;line-height:1.6"><div style="max-width:520px;margin:0 auto;padding:32px;background:#faffff;border:1px solid #c9e8e9;border-radius:20px"><p style="margin:0 0 26px;font-size:11px;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase;color:#478596">Evan's Archive / Email updates</p><h1 style="margin:0 0 16px;font-size:28px;line-height:1.2;color:#1b5c72">Confirm your email</h1><p style="margin:0 0 24px">Thanks for signing up! Confirm your email to get a note when I share a new post.</p><p style="margin:0 0 26px"><a href="${safeLink}" style="display:inline-block;padding:13px 20px;border-radius:10px;background:#176c8e;color:#ffffff;text-decoration:none;font-weight:bold">Confirm subscription</a></p><p style="margin:0;color:#658b96;font-size:13px">If you didn't request updates from Evan's Archive, you can ignore this email. You won't be subscribed unless you confirm.</p></div></body></html>`
 }
 
 async function resend(env, path, payload, key) {
@@ -301,7 +311,7 @@ async function subscribe(request, env) {
   await env.DB.prepare(`INSERT INTO mailing_subscribers (email, token, requested_at) VALUES (?, ?, ?)
     ON CONFLICT(email) DO UPDATE SET token = excluded.token, requested_at = excluded.requested_at WHERE confirmed = 0`).bind(email, token, now).run()
   const link = new URL(`/api/mailing/confirm?token=${encodeURIComponent(token)}`, env.SITE_URL).href
-  await resend(env, '/emails', { from: env.MAIL_FROM, to: [email], subject: 'Confirm your archive email updates', text: `Confirm that you want to receive new post updates: ${link}\n\nIf you did not request this, ignore this email.` })
+  await resend(env, '/emails', { from: env.MAIL_FROM, to: [email], subject: 'Confirm your email for Evan\'s Archive', html: confirmationEmail(link), text: `Confirm that you want to receive new post updates: ${link}\n\nIf you did not request this, ignore this email.` })
   return json({ ok: true })
 }
 
@@ -316,7 +326,7 @@ async function mailingAction(request, env, action) {
   if (request.method !== 'POST') return error('Not found.', 404)
   if (action === 'confirm') {
     const result = await env.DB.prepare("UPDATE mailing_subscribers SET confirmed = 1, confirmed_at = ? WHERE token = ? AND (confirmed = 1 OR requested_at > ?)").bind(new Date().toISOString(), token, new Date(Date.now() - 48 * 3600000).toISOString()).run()
-    return result.meta.changes ? mailPage('You?re subscribed', '<p>You will receive an email when a new post is published.</p>') : mailPage('Link unavailable', '<p>This link is invalid or has expired. Please sign up again.</p>')
+    return result.meta.changes ? mailPage('You&#8217;re subscribed', '<p>You will receive an email when a new post is published.</p>') : mailPage('Link unavailable', '<p>This link is invalid or has expired. Please sign up again.</p>')
   }
   await env.DB.prepare('DELETE FROM mailing_subscribers WHERE token = ?').bind(token).run()
   return mailPage('Unsubscribed', '<p>You will no longer receive new post updates.</p>')
