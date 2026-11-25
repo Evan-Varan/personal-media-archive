@@ -780,3 +780,13 @@ body[data-page="log"] .dashboard-cta:nth-child(2) { animation-delay:1.12s; }
 body[data-page="log"] .dashboard-mail-link { position:relative; z-index:3; display:inline-flex; align-items:center; gap:9px; margin-top:14px; padding:11px 15px; border:1px solid rgba(42,124,145,.25); border-radius:999px; color:#17647b; background:rgba(245,255,255,.78); box-shadow:0 6px 16px rgba(11,84,111,.1),inset 0 1px white; font:600 10px "DM Mono",monospace; letter-spacing:.06em; transition:transform .2s ease,background .2s ease; }
 body[data-page="log"] .dashboard-mail-link:hover,body[data-page="log"] .dashboard-mail-link:focus-visible { transform:translateY(-2px); background:white; }
 .mailing-signup { scroll-margin-top:90px; }
+
+/* Keep long post text within the manager so the action buttons remain visible. */
+.admin-posts { grid-template-columns:minmax(0,1fr); }
+.admin-post { min-width:0; grid-template-columns:67px minmax(0,1fr) auto; }
+.admin-post > div:not(.admin-post-actions) { min-width:0; }
+.admin-post small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+@media (max-width:760px) { .admin-post { grid-template-columns:54px minmax(0,1fr); } }
+
+/* Descriptions are reading copy, including when an older post has no title. */
+.reader-description, .reader-album-name + .reader-description { max-width:680px; margin:18px 0 0; color:#305f6d; font:400 clamp(1rem,1.15vw,1.125rem)/1.75 Manrope,Arial,sans-serif; letter-spacing:0; white-space:pre-wrap; overflow-wrap:anywhere; }

@@ -251,7 +251,7 @@ function renderOverlay(post) {
           <p class="reader-meta"><span>${escapeHTML(post.category === 'music' ? 'MUSIC / ALBUM' : labelForCategory(post.category))}</span>${post.category === 'music' && post.genre ? `<span>GENRE / ${escapeHTML(post.genre)}</span>` : ''}<span>${escapeHTML(formatDate(post.postDate))}</span></p>
           ${albumName ? `<p class="reader-record-label">ALBUM</p><h1 class="reader-album-name">${escapeHTML(albumName)}</h1>` : gameTitle ? `<h1 class="reader-album-name">${escapeHTML(gameTitle)}</h1>` : ''}
           ${artistName ? `<p class="reader-artist-name">ARTIST / ${escapeHTML(artistName)}</p>` : ''}
-          ${post.description ? post.category === 'music' ? `<p class="reader-note"><span>NOTE</span>${escapeHTML(post.description)}</p>` : `<h2 class="reader-description">${escapeHTML(post.description)}</h2>` : ''}
+          ${post.description ? post.category === 'music' ? `<p class="reader-note"><span>NOTE</span>${escapeHTML(post.description)}</p>` : `<p class="reader-description">${escapeHTML(post.description)}</p>` : ''}
         </div>
         <p class="reader-count">${String(post.images.length).padStart(2, '0')} ${post.images.length === 1 ? 'PHOTO' : 'PHOTOS'}</p>
       </header>
