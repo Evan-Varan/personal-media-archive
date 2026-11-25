@@ -302,6 +302,7 @@ function postFromFields(fields, existing = {}) {
     ...post,
     description: (fields.description || '').trim(),
     category,
+    gameTitle: category === 'game' ? (fields.gameTitle || '').trim().slice(0, 120) : '',
     albumName: category === 'music' ? (fields.albumName || '').trim().slice(0, 120) : '',
     artistName: category === 'music' ? (fields.artistName || '').trim().slice(0, 120) : '',
     genre: category === 'music' ? (fields.genre || '').trim().slice(0, 80) : '',
@@ -333,6 +334,7 @@ const server = createServer(async (request, res) => {
   const url = new URL(request.url || '/', `http://${request.headers.host || 'localhost'}`)
   const method = request.method || 'GET'
   try {
+    if (method === 'POST' && url.pathname === '/api/subscribe') return json(res, 503, { error: 'Email signups are available on the configured Cloudflare deployment.' })
     if (method === 'GET' && url.pathname === '/api/posts') {
       const posts = readPosts().filter((post) => post.published).sort((a, b) => new Date(b.postDate) - new Date(a.postDate))
       return json(res, 200, { posts })

@@ -14,7 +14,7 @@
       } catch {}
     </script>
     <link rel="preconnect" href="https://images.unsplash.com" />
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/styles.css?v=mailing-2" />
   </head>
   <body data-page="log" data-channel="log">
     <div class="boot-screen" id="bootScreen" aria-hidden="true">
@@ -95,6 +95,7 @@
             <span class="cta-arrow" aria-hidden="true">↗</span>
           </a>
         </div>
+        <a class="dashboard-mail-link" href="#mailingSignup">&#9993; <span>GET EMAIL UPDATES</span> <b aria-hidden="true">&#8599;</b></a>
       </div>
       <div class="hero-bottom reveal">
         <p id="heroDescription">Games, music, pictures, and whatever else<br />I feel like putting here.</p>
@@ -112,8 +113,12 @@
         <div class="post-feed" id="postFeed" aria-live="polite"></div>
         <p class="empty-state" id="emptyState" hidden>Nothing here yet.</p>
       </section>
-    </main>
 
+    <section class="mailing-signup" id="mailingSignup" aria-labelledby="mailingHeading">
+      <div><p class="console-label">EMAIL UPDATES</p><h2 id="mailingHeading">New posts, in your inbox.</h2><p>Get an email when I share something new. Unsubscribe anytime.</p></div>
+      <form id="mailingForm"><label for="mailingEmail">Email address</label><div><input id="mailingEmail" type="email" name="email" maxlength="254" autocomplete="email" required placeholder="you@example.com" /><button type="submit">SIGN UP</button></div><p id="mailingMessage" role="status" aria-live="polite"></p></form>
+    </section>
+    </main>
     <footer class="site-footer">
       <div class="footer-radar" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
       <p>MY SITE <span>●</span> GAMES, MUSIC + PICTURES</p>
@@ -164,6 +169,7 @@
             </label>
             <div class="image-preview" id="imagePreview"></div>
             <p class="image-order-hint" id="imageOrderHint" hidden>Drag images into the order you want them to appear.</p>
+            <div id="gameTitleField"><label class="field-label" for="gameTitle">GAME TITLE <small>OPTIONAL</small></label><input id="gameTitle" name="gameTitle" type="text" maxlength="120" autocomplete="off" placeholder="e.g. Desktop Survivors 98" /></div>
             <label class="field-label" for="description">A QUICK NOTE <small>OPTIONAL</small></label>
             <textarea id="description" name="description" placeholder="Finally got around to playing this again. Still holds up."></textarea>
             <div class="field-row">
@@ -236,6 +242,6 @@
       </article>
     </template>
 
-    <script type="module" src="/app.js"></script>
+    <script type="module" src="/app.js?v=mailing-1"></script>
   </body>
 </html>

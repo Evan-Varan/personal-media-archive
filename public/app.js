@@ -173,7 +173,7 @@ function renderFeed() {
       image.decoding = 'async'
       imageArea.append(image)
     })
-    const albumName = post.category === 'music' ? (post.albumName || '').trim() : ''
+    const albumName = post.category === 'music' ? (post.albumName || '').trim() : post.category === 'game' ? (post.gameTitle || '').trim() : ''
     const artistName = post.category === 'music' ? (post.artistName || '').trim() : ''
     $('.post-album-name', card).hidden = !albumName
     $('.post-album-name', card).textContent = albumName
@@ -240,6 +240,7 @@ function renderOverlay(post) {
   const currentIndex = posts.findIndex((item) => item.id === post.id)
   const overall = post.category === 'game' ? ratingAverage(post.ratings) : null
   const albumName = post.category === 'music' ? (post.albumName || '').trim() : ''
+  const gameTitle = post.category === 'game' ? (post.gameTitle || '').trim() : ''
   const artistName = post.category === 'music' ? (post.artistName || '').trim() : ''
   const isAlbumPost = post.category === 'music' && post.images.length === 1
   const ratingBreakdown = ratingCriteria.map(([key, label]) => `<div><span>${label}</span><strong>${Number(post.ratings?.[key]) >= 1 ? Number(post.ratings[key]).toFixed(1) : '—'}</strong></div>`).join('')
@@ -248,7 +249,7 @@ function renderOverlay(post) {
       <header class="reader-header">
         <div>
           <p class="reader-meta"><span>${escapeHTML(post.category === 'music' ? 'MUSIC / ALBUM' : labelForCategory(post.category))}</span>${post.category === 'music' && post.genre ? `<span>GENRE / ${escapeHTML(post.genre)}</span>` : ''}<span>${escapeHTML(formatDate(post.postDate))}</span></p>
-          ${albumName ? `<p class="reader-record-label">ALBUM</p><h1 class="reader-album-name">${escapeHTML(albumName)}</h1>` : ''}
+          ${albumName ? `<p class="reader-record-label">ALBUM</p><h1 class="reader-album-name">${escapeHTML(albumName)}</h1>` : gameTitle ? `<h1 class="reader-album-name">${escapeHTML(gameTitle)}</h1>` : ''}
           ${artistName ? `<p class="reader-artist-name">ARTIST / ${escapeHTML(artistName)}</p>` : ''}
           ${post.description ? post.category === 'music' ? `<p class="reader-note"><span>NOTE</span>${escapeHTML(post.description)}</p>` : `<h2 class="reader-description">${escapeHTML(post.description)}</h2>` : ''}
         </div>
@@ -626,6 +627,8 @@ function setCategory(category) {
   $('#category').value = value
   const hasScorecard = value === 'game'
   const hasGenre = value === 'music'
+  $('#gameTitleField').hidden = !hasScorecard
+  $('#gameTitle').disabled = !hasScorecard
   $('#ratingsPanel').hidden = !hasScorecard
   $('#ratingsPanel').setAttribute('aria-hidden', String(!hasScorecard))
   $('#musicDetailsPanel').hidden = !hasGenre
@@ -774,7 +777,7 @@ function updateMiniPreview() {
   const artistName = $('#artistName').value.trim()
   $('#previewRating').hidden = !hasScorecard && !hasGenre
   $('#previewRating').textContent = hasScorecard ? ratingSummary(currentRatings()) : hasGenre ? `ARTIST / ${artistName || '—'}${genre ? ` · ${genre.toUpperCase()}` : ''}` : ''
-  $('#previewText').textContent = hasGenre && albumName ? albumName : description || 'Your short note goes here.'
+  $('#previewText').textContent = hasGenre && albumName ? albumName : hasScorecard && $('#gameTitle').value.trim() ? $('#gameTitle').value.trim() : description || 'Your short note goes here.'
   const firstImage = state.images[0] ? imageSource(state.images[0]) : ''
   $('.mini-image').style.backgroundImage = firstImage ? `linear-gradient(135deg,rgba(8,105,139,.12),rgba(223,255,197,.1)),url("${firstImage}")` : ''
   $('.mini-image').style.backgroundSize = 'cover'
@@ -801,6 +804,7 @@ function editPost(id) {
   if (!post) return
   $('#editingId').value = post.id
   $('#description').value = post.description
+  $('#gameTitle').value = post.gameTitle || ''
   $('#albumName').value = post.albumName || ''
   $('#artistName').value = post.artistName || ''
   $('#genre').value = post.genre || ''
@@ -823,7 +827,7 @@ function renderAdminPosts() {
   container.innerHTML = state.adminPosts.map((post) => `
     <article class="admin-post">
       <img src="${escapeHTML(post.images[0])}" alt="" />
-      <div><small>${escapeHTML(labelForCategory(post.category))}${post.category === 'music' && post.albumName ? ` / ${escapeHTML(post.albumName.toUpperCase())}` : ''}${post.category === 'music' && post.artistName ? ` / ${escapeHTML(post.artistName.toUpperCase())}` : ''}${post.category === 'music' && post.genre ? ` / ${escapeHTML(post.genre.toUpperCase())}` : ''} / ${escapeHTML(formatDate(post.postDate))} ${post.published ? '' : '/ DRAFT'}</small><p>${escapeHTML(post.description || post.albumName || '[Untitled image post]')}</p></div>
+      <div><small>${escapeHTML(labelForCategory(post.category))}${post.category === 'music' && post.albumName ? ` / ${escapeHTML(post.albumName.toUpperCase())}` : ''}${post.category === 'music' && post.artistName ? ` / ${escapeHTML(post.artistName.toUpperCase())}` : ''}${post.category === 'music' && post.genre ? ` / ${escapeHTML(post.genre.toUpperCase())}` : ''} / ${escapeHTML(formatDate(post.postDate))} ${post.published ? '' : '/ DRAFT'}</small><p>${escapeHTML(post.gameTitle || post.albumName || post.description || '[Untitled image post]')}</p></div>
       <div class="admin-post-actions"><button type="button" data-edit="${escapeHTML(post.id)}">EDIT</button><button type="button" data-delete="${escapeHTML(post.id)}">DELETE</button></div>
     </article>`).join('') || '<p class="empty-state">No posts yet.</p>'
   $$('[data-edit]', container).forEach((button) => button.addEventListener('click', () => editPost(button.dataset.edit)))
@@ -886,6 +890,7 @@ function setupAdmin() {
   ;['dragleave', 'drop'].forEach((eventName) => zone.addEventListener(eventName, (event) => { event.preventDefault(); zone.classList.remove('dragging') }))
   zone.addEventListener('drop', (event) => acceptFiles(event.dataTransfer.files))
   $('#description').addEventListener('input', updateMiniPreview)
+  $('#gameTitle').addEventListener('input', updateMiniPreview)
   $('#albumName').addEventListener('input', updateMiniPreview)
   $('#artistName').addEventListener('input', updateMiniPreview)
   $('#genre').addEventListener('input', updateMiniPreview)
@@ -908,6 +913,7 @@ function setupAdmin() {
     const id = $('#editingId').value
     const form = new FormData()
     form.set('description', $('#description').value)
+    form.set('gameTitle', $('#gameTitle').value)
     form.set('category', $('#category').value)
     form.set('postDate', $('#postDate').value)
     form.set('albumName', $('#albumName').value)
@@ -922,10 +928,11 @@ function setupAdmin() {
     if (!state.images.length) { message.textContent = 'Add at least one image before publishing.'; return }
     $('#savePost').disabled = true; message.textContent = id ? 'SAVING CHANGES…' : 'PUBLISHING…'; message.classList.remove('success')
     try {
-      await api(id ? `/api/admin/posts/${id}` : '/api/admin/posts', { method: id ? 'PATCH' : 'POST', body: form })
-      message.textContent = id ? 'Changes saved.' : ($('#published').checked ? 'Published.' : 'Draft saved.')
+      const result = await api(id ? `/api/admin/posts/${id}` : '/api/admin/posts', { method: id ? 'PATCH' : 'POST', body: form })
+      message.textContent = result.mailWarning || (id ? 'Changes saved.' : ($('#published').checked ? 'Published.' : 'Draft saved.'))
       message.classList.add('success')
       await refreshAdminPosts(); await loadPublicPosts(); resetComposer()
+      message.textContent = result.mailWarning || (id ? 'Changes saved.' : 'Post saved.')
     } catch (error) { message.textContent = error.message } finally { $('#savePost').disabled = false }
   })
 }
@@ -958,6 +965,23 @@ function setupGeneralEvents() {
   window.addEventListener('popstate', () => changeRoute())
 }
 
+function setupMailingList() {
+  const form = $('#mailingForm')
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault()
+    const message = $('#mailingMessage')
+    const button = form.querySelector('button')
+    button.disabled = true
+    message.textContent = 'Sending confirmation?'
+    try {
+      await api('/api/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: $('#mailingEmail').value }) })
+      message.textContent = 'Check your inbox for a confirmation link.'
+      form.reset()
+    } catch (error) { message.textContent = error.message }
+    finally { button.disabled = false }
+  })
+}
+
 function setupBoot() {
   const boot = $('#bootScreen')
   if (!boot) return
@@ -979,7 +1003,7 @@ function setupBoot() {
 }
 
 async function init() {
-  setupBoot(); setupPointer(); setupSkySecrets(); setupSceneTargets(); setupAdmin(); setupGeneralEvents(); updateFilterUI()
+  setupBoot(); setupMailingList(); setupPointer(); setupSkySecrets(); setupSceneTargets(); setupAdmin(); setupGeneralEvents(); updateFilterUI()
   document.documentElement.classList.toggle('reduced-motion', state.motionReduced)
   await loadPublicPosts()
   setupScrollStudio()

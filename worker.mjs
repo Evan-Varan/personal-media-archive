@@ -77,6 +77,7 @@ function rowToPost(row) {
     category: row.category,
     published: Boolean(row.published),
     description: row.description,
+    gameTitle: row.game_title || '',
     albumName: row.album_name || '',
     artistName: row.artist_name || '',
     genre: row.genre || '',
@@ -116,6 +117,7 @@ function postFromForm(form, existing = {}) {
     ...existing,
     description: String(form.get('description') || '').trim(),
     category,
+    gameTitle: category === 'game' ? String(form.get('gameTitle') || '').trim().slice(0, 120) : '',
     albumName: category === 'music' ? String(form.get('albumName') || '').trim().slice(0, 120) : '',
     artistName: category === 'music' ? String(form.get('artistName') || '').trim().slice(0, 120) : '',
     genre: category === 'music' ? String(form.get('genre') || '').trim().slice(0, 80) : '',
@@ -259,11 +261,11 @@ function orderedImages(form, existingImages, additions) {
 }
 
 async function savePost(env, post) {
-  await env.DB.prepare(`INSERT INTO posts (id, created_at, post_date, category, published, description, album_name, artist_name, genre, ratings, overall_rating, images)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  await env.DB.prepare(`INSERT INTO posts (id, created_at, post_date, category, published, description, game_title, album_name, artist_name, genre, ratings, overall_rating, images)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET created_at = excluded.created_at, post_date = excluded.post_date, category = excluded.category,
-      published = excluded.published, description = excluded.description, album_name = excluded.album_name, artist_name = excluded.artist_name, genre = excluded.genre, ratings = excluded.ratings, overall_rating = excluded.overall_rating, images = excluded.images`)
-    .bind(post.id, post.createdAt, post.postDate, post.category, post.published ? 1 : 0, post.description, post.albumName, post.artistName, post.genre, JSON.stringify(post.ratings), post.overallRating, JSON.stringify(post.images)).run()
+      published = excluded.published, description = excluded.description, game_title = excluded.game_title, album_name = excluded.album_name, artist_name = excluded.artist_name, genre = excluded.genre, ratings = excluded.ratings, overall_rating = excluded.overall_rating, images = excluded.images`)
+    .bind(post.id, post.createdAt, post.postDate, post.category, post.published ? 1 : 0, post.description, post.gameTitle, post.albumName, post.artistName, post.genre, JSON.stringify(post.ratings), post.overallRating, JSON.stringify(post.images)).run()
 }
 
 async function deleteRemovedUploads(env, previousImages, nextImages) {
@@ -271,8 +273,78 @@ async function deleteRemovedUploads(env, previousImages, nextImages) {
   if (removed.length) await env.MEDIA.delete(removed)
 }
 
+
+function mailingConfigured(env) {
+  return Boolean(env.RESEND_API_KEY && env.MAIL_FROM && env.SITE_URL)
+}
+
+function mailPage(title, body) {
+  return new Response(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${title}</title><body style="font:16px system-ui;color:#205b70;background:#e4f9f8;padding:3rem;line-height:1.5"><main style="max-width:36rem;margin:auto"><h1>${title}</h1>${body}<p><a href="/">Back to the archive</a></p></main></body></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } })
+}
+
+async function resend(env, path, payload, key) {
+  const response = await fetch(`https://api.resend.com${path}`, {
+    method: 'POST', headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json', ...(key ? { 'Idempotency-Key': key } : {}) }, body: JSON.stringify(payload)
+  })
+  if (!response.ok) { console.error('Email provider rejected request', response.status, await response.text()); throw new Error('Email delivery failed.') }
+}
+
+async function subscribe(request, env) {
+  if (!mailingConfigured(env)) return error('Email signups are not available yet.', 503)
+  const body = await request.json().catch(() => ({}))
+  const email = String(body.email || '').trim().toLowerCase()
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return error('Please enter a valid email address.')
+  const previous = await env.DB.prepare('SELECT confirmed, requested_at FROM mailing_subscribers WHERE email = ?').bind(email).first()
+  if (previous?.confirmed || (previous && Date.now() - Date.parse(previous.requested_at) < 60000)) return json({ ok: true })
+  const token = crypto.randomUUID() + crypto.randomUUID()
+  const now = new Date().toISOString()
+  await env.DB.prepare(`INSERT INTO mailing_subscribers (email, token, requested_at) VALUES (?, ?, ?)
+    ON CONFLICT(email) DO UPDATE SET token = excluded.token, requested_at = excluded.requested_at WHERE confirmed = 0`).bind(email, token, now).run()
+  const link = new URL(`/api/mailing/confirm?token=${encodeURIComponent(token)}`, env.SITE_URL).href
+  await resend(env, '/emails', { from: env.MAIL_FROM, to: [email], subject: 'Confirm your archive email updates', text: `Confirm that you want to receive new post updates: ${link}\n\nIf you did not request this, ignore this email.` })
+  return json({ ok: true })
+}
+
+async function mailingAction(request, env, action) {
+  const url = new URL(request.url)
+  const token = url.searchParams.get('token') || ''
+  if (!/^[a-f0-9-]{72}$/.test(token)) return mailPage('Link unavailable', '<p>This link is invalid or has expired.</p>')
+  if (request.method === 'GET') {
+    const label = action === 'confirm' ? 'Confirm subscription' : 'Unsubscribe'
+    return mailPage(label, `<p>${action === 'confirm' ? 'Confirm that you want to receive new post updates.' : 'Stop receiving new post updates.'}</p><form method="post"><button type="submit">${label}</button></form>`)
+  }
+  if (request.method !== 'POST') return error('Not found.', 404)
+  if (action === 'confirm') {
+    const result = await env.DB.prepare("UPDATE mailing_subscribers SET confirmed = 1, confirmed_at = ? WHERE token = ? AND (confirmed = 1 OR requested_at > ?)").bind(new Date().toISOString(), token, new Date(Date.now() - 48 * 3600000).toISOString()).run()
+    return result.meta.changes ? mailPage('You?re subscribed', '<p>You will receive an email when a new post is published.</p>') : mailPage('Link unavailable', '<p>This link is invalid or has expired. Please sign up again.</p>')
+  }
+  await env.DB.prepare('DELETE FROM mailing_subscribers WHERE token = ?').bind(token).run()
+  return mailPage('Unsubscribed', '<p>You will no longer receive new post updates.</p>')
+}
+
+async function announcePost(env, post) {
+  const claimed = await env.DB.prepare('UPDATE posts SET mailing_announced = 1 WHERE id = ? AND mailing_announced = 0').bind(post.id).run()
+  if (!claimed.meta.changes) return ''
+  if (!mailingConfigured(env)) return 'Post saved, but email updates are not configured.'
+  try {
+    const { results } = await env.DB.prepare('SELECT email, token FROM mailing_subscribers WHERE confirmed = 1 ORDER BY email').all()
+    const title = post.gameTitle || post.albumName || 'A new post'
+    const site = new URL('/', env.SITE_URL).href
+    for (let offset = 0; offset < results.length; offset += 100) {
+      const batch = results.slice(offset, offset + 100).map(({ email, token }) => {
+        const unsubscribe = new URL(`/api/mailing/unsubscribe?token=${encodeURIComponent(token)}`, env.SITE_URL).href
+        return { from: env.MAIL_FROM, to: [email], subject: `New post: ${title}`, text: `${title}\n\n${post.description || 'A new post is up on the archive.'}\n\nVisit the archive: ${site}\n\nUnsubscribe: ${unsubscribe}`, headers: { 'List-Unsubscribe': `<${unsubscribe}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } }
+      })
+      await resend(env, '/emails/batch', batch, `post/${post.id}/${offset}`)
+    }
+    return ''
+  } catch (exception) { console.error(exception); return 'Post saved, but some email notifications could not be sent. Check the Worker logs.' }
+}
+
 async function api(request, env, pathname) {
   const method = request.method
+  if (method === 'POST' && pathname === '/api/subscribe') return await subscribe(request, env)
+  if (pathname === '/api/mailing/confirm' || pathname === '/api/mailing/unsubscribe') return await mailingAction(request, env, pathname.endsWith('/confirm') ? 'confirm' : 'unsubscribe')
   if (method === 'GET' && pathname === '/api/posts') return json({ posts: await readPosts(env) })
   if (method === 'GET' && pathname === '/api/auth/status') return json({ authenticated: await authenticated(request, env), configured: Boolean(env.ADMIN_PASSWORD) })
   if (method === 'POST' && pathname === '/api/auth/login') {
@@ -302,7 +374,8 @@ async function api(request, env, pathname) {
     if (!images.length) return error('Add at least one image.')
     const post = { id: crypto.randomUUID(), createdAt: new Date().toISOString(), ...postFromForm(form), images }
     await savePost(env, post)
-    return json({ post }, 201)
+    const mailWarning = post.published ? await announcePost(env, post) : ''
+    return json({ post, mailWarning }, 201)
   }
 
   const id = pathname.match(/^\/api\/admin\/posts\/([^/]+)$/)?.[1]
@@ -317,7 +390,8 @@ async function api(request, env, pathname) {
     const post = { ...postFromForm(form, existing), images }
     await savePost(env, post)
     await deleteRemovedUploads(env, existing.images, images)
-    return json({ post })
+    const mailWarning = !existing.published && post.published ? await announcePost(env, post) : ''
+    return json({ post, mailWarning })
   }
   if (method === 'DELETE') {
     await env.DB.prepare('DELETE FROM posts WHERE id = ?').bind(existing.id).run()

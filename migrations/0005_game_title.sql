@@ -1,0 +1,1 @@
+ALTER TABLE posts ADD COLUMN game_title TEXT NOT NULL DEFAULT '';
